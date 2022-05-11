@@ -1,4 +1,5 @@
 import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.grammarkit.tasks.GenerateLexerTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 fun properties(key: String) = project.findProperty(key).toString()
@@ -14,10 +15,19 @@ plugins {
     id("org.jetbrains.changelog") version "1.3.1"
     // Gradle Qodana Plugin
     id("org.jetbrains.qodana") version "0.1.13"
+    // Gradle Grammar Kit Plugin
+    id("org.jetbrains.grammarkit") version "2021.2.2"
 }
 
 group = properties("pluginGroup")
 version = properties("pluginVersion")
+
+val generatedSourcesDir = "build/generated"
+val kotlinDir = "src/main/kotlin"
+val packageDir = "com/github/winteryuki/intellijlua"
+
+java.sourceSets["main"].java.srcDir(file("$generatedSourcesDir/$kotlinDir"))
+idea.module.generatedSourceDirs.add(file("$generatedSourcesDir/$kotlinDir"))
 
 // Configure project's dependencies
 repositories {
@@ -114,3 +124,13 @@ tasks {
         channels.set(listOf(properties("pluginVersion").split('-').getOrElse(1) { "default" }.split('.').first()))
     }
 }
+
+val lexerDir = "lexer"
+
+tasks.register<GenerateLexerTask>("generateJFlex") {
+    source.set("${project.projectDir}/$kotlinDir/$packageDir/$lexerDir/LuaLexer.flex")
+    targetDir.set("$generatedSourcesDir/$kotlinDir/$packageDir/$lexerDir")
+    targetClass.set("LuaLexerGenerated")
+}
+
+tasks["compileKotlin"].dependsOn += "generateJFlex"
