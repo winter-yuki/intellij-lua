@@ -1,17 +1,15 @@
 package com.github.winteryuki.intellijlua.psi
 
 import com.github.winteryuki.intellijlua.LuaLanguage
+import com.github.winteryuki.intellijlua.utils.AbstractSortContainer
+import com.github.winteryuki.intellijlua.utils.Sort
 import com.intellij.psi.tree.IElementType
-import com.intellij.psi.tree.TokenSet
 import org.jetbrains.annotations.NonNls
-import kotlin.properties.PropertyDelegateProvider
-import kotlin.properties.ReadOnlyProperty
 
 class LuaTokenType private constructor(@NonNls debugName: String) : IElementType(debugName, LuaLanguage) {
     override fun toString(): String = "LuaTokenType.${super.toString()}"
 
-    companion object {
-        private interface Sort
+    companion object : AbstractSortContainer<LuaTokenType>(::LuaTokenType, List<LuaTokenType>::toTypedArray) {
         private object Keyword : Sort
         private object Operator : Sort
         private object Constant : Sort
@@ -22,17 +20,6 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
         private object Braces : Sort
         private object Brackets : Sort
         private object WhiteSpace : Sort
-
-        private val tokenSorts = mutableMapOf<LuaTokenType, Set<Sort>>()
-        private fun token(vararg sorts: Sort) = PropertyDelegateProvider { _: Any?, property ->
-            val token by lazy { LuaTokenType(property.name).also { tokenSorts[it] = sorts.toSet() } }
-            ReadOnlyProperty<Any?, LuaTokenType> { _, _ -> token }
-        }
-
-        private fun tokenSetOf(sort: Sort): TokenSet {
-            val filtered = tokens.filter { sort in tokenSorts[it].orEmpty() }
-            return TokenSet.create(*filtered.toTypedArray())
-        }
 
         val keywords by lazy { tokenSetOf(Keyword) }
         val operators by lazy { tokenSetOf(Operator) }
@@ -132,8 +119,7 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
         val L_BRACKET by token(Brackets) // [
         val R_BRACKET by token(Brackets) // ]
 
-        // Delegate providers are lazy so manual initialization is needed anyway
-        private val tokens = listOf(
+        override val tokens = listOf(
             WHITE_SPACE,
             AND, BREAK, DO, ELSE, ELSEIF, END, FALSE, FOR, FUNCTION, GOTO,
             IF, IN, LOCAL, NIL, NOT, OR, REPEAT, RETURN, THEN, TRUE, UNTIL, WHILE,
