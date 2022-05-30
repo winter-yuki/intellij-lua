@@ -127,4 +127,6 @@ Real = ([0-9]+\.[0-9]*|[0-9]*\.[0-9]+) ([eE] [+-]? [0-9]+)?
 {OctInt}            { return LuaTokenType.Companion.getOCT_INT_NUMBER(); }
 {Real}              { return LuaTokenType.Companion.getREAL_NUMBER(); }
 
+{WhiteSpace}        { return LuaTokenType.Companion.getWHITE_SPACE(); }
+
 [^]                 { return BAD_CHARACTER; }

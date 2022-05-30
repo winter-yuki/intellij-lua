@@ -21,6 +21,7 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
         private object Parens : Sort
         private object Braces : Sort
         private object Brackets : Sort
+        private object WhiteSpace : Sort
 
         private val tokenSorts = mutableMapOf<LuaTokenType, Set<Sort>>()
         private fun token(vararg sorts: Sort) = PropertyDelegateProvider { _: Any?, property ->
@@ -42,6 +43,9 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
         val parens by lazy { tokenSetOf(Parens) }
         val braces by lazy { tokenSetOf(Braces) }
         val brackets by lazy { tokenSetOf(Brackets) }
+        val whiteSpaces by lazy { tokenSetOf(WhiteSpace) }
+
+        val WHITE_SPACE by token(WhiteSpace)
 
         val FALSE by token(Constant)
         val TRUE by token(Constant)
@@ -130,6 +134,7 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
 
         // Delegate providers are lazy so manual initialization is needed anyway
         private val tokens = listOf(
+            WHITE_SPACE,
             AND, BREAK, DO, ELSE, ELSEIF, END, FALSE, FOR, FUNCTION, GOTO,
             IF, IN, LOCAL, NIL, NOT, OR, REPEAT, RETURN, THEN, TRUE, UNTIL, WHILE,
             PLUS, MINUS, MUL, DIV, MOD, POW, SHARP, BAND, BNOT, BOR, SHL, SHR, IDIV, EQ, NEQ, GE, LT, GT, ASSIGN,

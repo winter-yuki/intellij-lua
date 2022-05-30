@@ -8,7 +8,7 @@
       Lua language support plugin for IntelliJ IDEA.
     ]]></description>
 
-    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <fileType name="Lua File"
@@ -20,5 +20,8 @@
                 language="Lua"
                 implementationClass="com.github.winteryuki.intellijlua.LuaSyntaxHighlighterFactory"/>
         <colorSettingsPage implementation="com.github.winteryuki.intellijlua.LuaColorSettingsPage"/>
+        <lang.parserDefinition
+                language="Lua"
+                implementationClass="com.github.winteryuki.intellijlua.LuaParserDefinition"/>
     </extensions>
 </idea-plugin>
