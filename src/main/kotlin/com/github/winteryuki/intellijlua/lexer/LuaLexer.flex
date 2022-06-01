@@ -23,6 +23,7 @@ import com.github.winteryuki.intellijlua.psi.LuaTokenType;
 LineTerminator = \r|\n|\r\n
 InputCharacter = [^\r\n]
 WhiteSpace     = {LineTerminator} | [ \t\f]
+WhiteSpaces    = {WhiteSpace}+
 Alpha          = [a-zA-Z]
 Digit          = [0-9]
 AlphaDigit     = {Alpha} | {Digit}
@@ -41,6 +42,8 @@ DecInt = 0 | [1-9] {Digit}*
 HexInt = 0 | 0 [xX] [1-9A-D] ({Digit} | [A-D])*
 OctInt = 0 | [1-7] [0-7]*
 Real = ([0-9]+\.[0-9]*|[0-9]*\.[0-9]+) ([eE] [+-]? [0-9]+)?
+
+LocalFunction = "local" {WhiteSpace}+ "function"
 
 %%
 
@@ -108,6 +111,7 @@ Real = ([0-9]+\.[0-9]*|[0-9]*\.[0-9]+) ([eE] [+-]? [0-9]+)?
 "break"             { return LuaTokenType.Companion.getBREAK(); }
 "in"                { return LuaTokenType.Companion.getIN(); }
 
+{LocalFunction}     { return LuaTokenType.Companion.getLOCAL_FUNCTION(); }
 "local"             { return LuaTokenType.Companion.getLOCAL(); }
 "function"          { return LuaTokenType.Companion.getFUNCTION(); }
 
@@ -127,6 +131,6 @@ Real = ([0-9]+\.[0-9]*|[0-9]*\.[0-9]+) ([eE] [+-]? [0-9]+)?
 {OctInt}            { return LuaTokenType.Companion.getOCT_INT_NUMBER(); }
 {Real}              { return LuaTokenType.Companion.getREAL_NUMBER(); }
 
-{WhiteSpace}        { return LuaTokenType.Companion.getWHITE_SPACE(); }
+{WhiteSpaces}        { return LuaTokenType.Companion.getWHITE_SPACE(); }
 
 [^]                 { return BAD_CHARACTER; }
