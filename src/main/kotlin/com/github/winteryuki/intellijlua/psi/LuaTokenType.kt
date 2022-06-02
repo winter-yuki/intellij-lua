@@ -1,130 +1,130 @@
 package com.github.winteryuki.intellijlua.psi
 
 import com.github.winteryuki.intellijlua.LuaLanguage
-import com.github.winteryuki.intellijlua.utils.AbstractSortContainer
-import com.github.winteryuki.intellijlua.utils.Sort
+import com.github.winteryuki.intellijlua.utils.AbstractTokenContainer
+import com.github.winteryuki.intellijlua.utils.TokenSort
 import com.intellij.psi.tree.IElementType
 import org.jetbrains.annotations.NonNls
 
 class LuaTokenType private constructor(@NonNls debugName: String) : IElementType(debugName, LuaLanguage) {
     override fun toString(): String = "LuaTokenType.${super.toString()}"
 
-    companion object : AbstractSortContainer<LuaTokenType>(::LuaTokenType) {
-        private object Keyword : Sort
-        private object Operator : Sort
-        private object Constant : Sort
-        private object Comment : Sort
-        private object Number : Sort
-        private object StringLiteral : Sort
-        private object Parens : Sort
-        private object Braces : Sort
-        private object Brackets : Sort
-        private object WhiteSpace : Sort
-        private object StmtBegin : Sort
-        private object StmtEnd : Sort
+    companion object : AbstractTokenContainer<LuaTokenType>(::LuaTokenType) {
+        private object Keyword : TokenSort
+        private object Operator : TokenSort
+        private object Constant : TokenSort
+        private object Comment : TokenSort
+        private object Number : TokenSort
+        private object StringLiteral : TokenSort
+        private object Parens : TokenSort
+        private object Braces : TokenSort
+        private object Brackets : TokenSort
+        private object WhiteSpace : TokenSort
+        private object StmtBegin : TokenSort
+        private object StmtEnd : TokenSort
 
-        val keywords by lazy { itemSetOf(Keyword) }
-        val operators by lazy { itemSetOf(Operator) }
-        val constants by lazy { itemSetOf(Constant) }
-        val comments by lazy { itemSetOf(Comment) }
-        val numbers by lazy { itemSetOf(Number) }
-        val strings by lazy { itemSetOf(StringLiteral) }
-        val parens by lazy { itemSetOf(Parens) }
-        val braces by lazy { itemSetOf(Braces) }
-        val brackets by lazy { itemSetOf(Brackets) }
-        val whiteSpaces by lazy { itemSetOf(WhiteSpace) }
-        val beginStmt by lazy { itemSetOf(StmtBegin) }
-        val endStmt by lazy { itemSetOf(StmtEnd) }
+        val keywords by lazy { tokenSetOf(Keyword) }
+        val operators by lazy { tokenSetOf(Operator) }
+        val constants by lazy { tokenSetOf(Constant) }
+        val comments by lazy { tokenSetOf(Comment) }
+        val numbers by lazy { tokenSetOf(Number) }
+        val strings by lazy { tokenSetOf(StringLiteral) }
+        val parens by lazy { tokenSetOf(Parens) }
+        val braces by lazy { tokenSetOf(Braces) }
+        val brackets by lazy { tokenSetOf(Brackets) }
+        val whiteSpaces by lazy { tokenSetOf(WhiteSpace) }
+        val beginStmt by lazy { tokenSetOf(StmtBegin) }
+        val endStmt by lazy { tokenSetOf(StmtEnd) }
 
-        val WHITE_SPACE by item(WhiteSpace)
+        val WHITE_SPACE by token(WhiteSpace)
 
-        val FALSE by item(Constant)
-        val TRUE by item(Constant)
+        val FALSE by token(Constant)
+        val TRUE by token(Constant)
 
-        val NIL by item(Constant)
+        val NIL by token(Constant)
 
-        val GOTO by item(Keyword, StmtBegin)
-        val END by item(Keyword, StmtEnd)
+        val GOTO by token(Keyword, StmtBegin)
+        val END by token(Keyword, StmtEnd)
 
-        val IF by item(Keyword, StmtBegin)
-        val THEN by item(Keyword)
-        val ELSE by item(Keyword)
-        val ELSEIF by item(Keyword)
+        val IF by token(Keyword, StmtBegin)
+        val THEN by token(Keyword)
+        val ELSE by token(Keyword)
+        val ELSEIF by token(Keyword)
 
-        val FOR by item(Keyword, StmtBegin)
-        val UNTIL by item(Keyword, StmtBegin)
-        val WHILE by item(Keyword, StmtBegin)
-        val BREAK by item(Keyword, StmtBegin)
-        val REPEAT by item(Keyword, StmtBegin)
-        val DO by item(Keyword, StmtBegin)
+        val FOR by token(Keyword, StmtBegin)
+        val UNTIL by token(Keyword, StmtBegin)
+        val WHILE by token(Keyword, StmtBegin)
+        val BREAK by token(Keyword, StmtBegin)
+        val REPEAT by token(Keyword, StmtBegin)
+        val DO by token(Keyword, StmtBegin)
 
-        val AND by item(Keyword)
-        val OR by item(Keyword)
-        val NOT by item(Keyword)
+        val AND by token(Keyword)
+        val OR by token(Keyword)
+        val NOT by token(Keyword)
 
-        val LOCAL_FUNCTION by item(Keyword, StmtBegin)
-        val FUNCTION by item(Keyword, StmtBegin)
-        val LOCAL by item(Keyword, StmtBegin)
-        val RETURN by item(Keyword, StmtBegin)
+        val LOCAL_FUNCTION by token(Keyword, StmtBegin)
+        val FUNCTION by token(Keyword, StmtBegin)
+        val LOCAL by token(Keyword, StmtBegin)
+        val RETURN by token(Keyword, StmtBegin)
 
-        val IN by item(Keyword)
+        val IN by token(Keyword)
 
-        val PLUS by item(Operator)     // +
-        val MINUS by item(Operator)    // -
-        val MUL by item(Operator)      // *
-        val DIV by item(Operator)      // /
-        val MOD by item(Operator)      // %
-        val POW by item(Operator)      // ^
-        val IDIV by item(Operator)     // //
+        val PLUS by token(Operator)     // +
+        val MINUS by token(Operator)    // -
+        val MUL by token(Operator)      // *
+        val DIV by token(Operator)      // /
+        val MOD by token(Operator)      // %
+        val POW by token(Operator)      // ^
+        val IDIV by token(Operator)     // //
 
-        val SHARP by item(Operator)    // #
-        val DOTDOT by item(Operator)   // ..
+        val SHARP by token(Operator)    // #
+        val DOTDOT by token(Operator)   // ..
 
-        val BAND by item(Operator)     // &
-        val BNOT by item(Operator)     // ~
-        val BOR by item(Operator)      // |
+        val BAND by token(Operator)     // &
+        val BNOT by token(Operator)     // ~
+        val BOR by token(Operator)      // |
 
-        val SHL by item(Operator)      // <<
-        val SHR by item(Operator)      // >>
+        val SHL by token(Operator)      // <<
+        val SHR by token(Operator)      // >>
 
-        val EQ by item(Operator)       // ==
-        val NEQ by item(Operator)      // ~=
-        val LE by item(Operator)       // <=
-        val GE by item(Operator)       // >=
-        val LT by item(Operator)       // <
-        val GT by item(Operator)       // >
+        val EQ by token(Operator)       // ==
+        val NEQ by token(Operator)      // ~=
+        val LE by token(Operator)       // <=
+        val GE by token(Operator)       // >=
+        val LT by token(Operator)       // <
+        val GT by token(Operator)       // >
 
-        val ASSIGN by item(Operator)   // =
+        val ASSIGN by token(Operator)   // =
 
-        val SEMICOLON by item(Operator, StmtEnd)    // ;
-        val COLON by item(Operator)                 // :
-        val DOUBLE_COLON by item(Operator)          // ::
-        val COMMA by item(Operator)                 // ,
-        val DOT by item(Operator)                   // .
-        val DOTDOTDOT by item(Operator)             // ...
+        val SEMICOLON by token(Operator, StmtEnd)    // ;
+        val COLON by token(Operator)                 // :
+        val DOUBLE_COLON by token(Operator)          // ::
+        val COMMA by token(Operator)                 // ,
+        val DOT by token(Operator)                   // .
+        val DOTDOTDOT by token(Operator)             // ...
 
-        val LINE_COMMENT by item(Comment)
-        val BLOCK_COMMENT by item(Comment)
+        val LINE_COMMENT by token(Comment)
+        val BLOCK_COMMENT by token(Comment)
 
-        val IDENTIFIER by item()
+        val IDENTIFIER by token()
 
-        val DEC_INT_NUMBER by item(Number)
-        val HEX_INT_NUMBER by item(Number)
-        val OCT_INT_NUMBER by item(Number)
-        val REAL_NUMBER by item(Number)
+        val DEC_INT_NUMBER by token(Number)
+        val HEX_INT_NUMBER by token(Number)
+        val OCT_INT_NUMBER by token(Number)
+        val REAL_NUMBER by token(Number)
 
-        val SINGLE_QUOTED_STRING by item(StringLiteral)
-        val DOUBLE_QUOTED_STRING by item(StringLiteral)
-        val LONG_BRACKETS_STRING by item(StringLiteral)
+        val SINGLE_QUOTED_STRING by token(StringLiteral)
+        val DOUBLE_QUOTED_STRING by token(StringLiteral)
+        val LONG_BRACKETS_STRING by token(StringLiteral)
 
-        val L_PAREN by item(Parens)     // (
-        val R_PAREN by item(Parens)     // )
-        val L_BRACE by item(Braces)     // {
-        val R_BRACE by item(Braces)     // }
-        val L_BRACKET by item(Brackets) // [
-        val R_BRACKET by item(Brackets) // ]
+        val L_PAREN by token(Parens)     // (
+        val R_PAREN by token(Parens)     // )
+        val L_BRACE by token(Braces)     // {
+        val R_BRACE by token(Braces)     // }
+        val L_BRACKET by token(Brackets) // [
+        val R_BRACKET by token(Brackets) // ]
 
-        override val items = listOf(
+        override val tokens = listOf(
             WHITE_SPACE, AND, BREAK, DO, ELSE, ELSEIF, END, FALSE, FOR, LOCAL_FUNCTION, FUNCTION, GOTO,
             IF, IN, LOCAL, NIL, NOT, OR, REPEAT, RETURN, THEN, TRUE, UNTIL, WHILE,
             PLUS, MINUS, MUL, DIV, MOD, POW, SHARP, BAND, BNOT, BOR, SHL, SHR, IDIV, EQ, NEQ, GE, LT, GT, ASSIGN,

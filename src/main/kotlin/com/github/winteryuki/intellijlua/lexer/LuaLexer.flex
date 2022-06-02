@@ -5,8 +5,8 @@ import com.intellij.psi.tree.IElementType;
 import static com.intellij.psi.TokenType.BAD_CHARACTER;
 
 import com.github.winteryuki.intellijlua.psi.LuaTokenType;
-
 %%
+
 %{
     public LuaLexerGenerated() {
         this((java.io.Reader) null);
@@ -22,28 +22,25 @@ import com.github.winteryuki.intellijlua.psi.LuaTokenType;
 
 LineTerminator = \r|\n|\r\n
 InputCharacter = [^\r\n]
-WhiteSpace     = {LineTerminator} | [ \t\f]
-WhiteSpaces    = {WhiteSpace}+
-Alpha          = [a-zA-Z]
+WS             = {LineTerminator} | [ \t\f]
+WSs            = {WS}+
 Digit          = [0-9]
-AlphaDigit     = {Alpha} | {Digit}
 
 Identifier = [:jletter:] [:jletterdigit:]*
-DecIntegerLiteral = 0 | [1-9][0-9]*
 
 LineComment  = "--" {InputCharacter}* {LineTerminator}?
-BlockComment = "--[[" ({InputCharacter} | {WhiteSpace})* "]]"
+BlockComment = "--[[" ({InputCharacter} | {WS})* "]]"
 
 SingleQuotedString = \'([^\'\r\n])*\'
 DoubleQuotedString = \"([^\"\r\n])*\"
-LongQuotedString = "[[" ({InputCharacter} | {WhiteSpace})* "]]"
+LongQuotedString = "[[" ({InputCharacter} | {WS})* "]]"
 
 DecInt = 0 | [1-9] {Digit}*
 HexInt = 0 | 0 [xX] [1-9A-D] ({Digit} | [A-D])*
 OctInt = 0 | [1-7] [0-7]*
 Real = ([0-9]+\.[0-9]*|[0-9]*\.[0-9]+) ([eE] [+-]? [0-9]+)?
 
-LocalFunction = "local" {WhiteSpace}+ "function"
+LocalFunction = "local" {WS}+ "function"
 
 %%
 
@@ -131,6 +128,6 @@ LocalFunction = "local" {WhiteSpace}+ "function"
 {OctInt}            { return LuaTokenType.Companion.getOCT_INT_NUMBER(); }
 {Real}              { return LuaTokenType.Companion.getREAL_NUMBER(); }
 
-{WhiteSpaces}        { return LuaTokenType.Companion.getWHITE_SPACE(); }
+{WSs}               { return LuaTokenType.Companion.getWHITE_SPACE(); }
 
 [^]                 { return BAD_CHARACTER; }
