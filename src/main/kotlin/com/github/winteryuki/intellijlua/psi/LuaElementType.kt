@@ -14,12 +14,13 @@ class LuaElementType(@NonNls debugName: String) : IElementType(debugName, LuaLan
         val LUA_FILE = IFileElementType(LuaLanguage)
         val LUA_STUB_FILE = LuaStubFileElementType()
 
-        object Stmt : TokenSort
+        private object Stmt : TokenSort
 
         val BLOCK by token()
 
         val SEMICOLON_STMT by token(Stmt)
         val BREAK_STMT by token(Stmt)
+        val LABEL_STMT by token(Stmt)
         val GOTO_STMT by token(Stmt)
         val DO_STMT by token(Stmt)
         val WHILE_STMT by token(Stmt)
@@ -34,11 +35,18 @@ class LuaElementType(@NonNls debugName: String) : IElementType(debugName, LuaLan
 
         val EXPR by token()
 
+        val STRING by token()
+        val NUMBER by token()
+        val FIELD by token()
+        val FIELD_LIST by token()
+        val TABLE_CONSTRUCTOR by token()
+
         fun createElement(node: ASTNode): PsiElement =
             when (val type = node.elementType) {
                 BLOCK -> LuaBlockElement(node)
                 SEMICOLON_STMT -> LuaSemicolonStmtElement(node)
                 BREAK_STMT -> LuaBreakStmtElement(node)
+                LABEL_STMT -> LuaLabelStmtElement(node)
                 GOTO_STMT -> LuaGotoStmtElement(node)
                 DO_STMT -> LuaDoStmtElement(node)
                 WHILE_STMT -> LuaWhileStmtElement(node)
@@ -51,13 +59,19 @@ class LuaElementType(@NonNls debugName: String) : IElementType(debugName, LuaLan
                 RETURN_STMT -> LuaReturnStmtElement(node)
                 GARBAGE_STMT -> LuaGarbageStmtElement(node)
                 EXPR -> LuaExprElement(node)
+                STRING -> LuaStringElement(node)
+                NUMBER -> LuaNumberElement(node)
+                FIELD -> LuaFieldElement(node)
+                FIELD_LIST -> LuaFieldListElement(node)
+                TABLE_CONSTRUCTOR -> LuaTableConstructorElement(node)
                 else -> error("Unknown element type $type")
             }
 
         override val tokens: List<LuaElementType> = listOf(
-            BLOCK, SEMICOLON_STMT, IF_STMT, EXPR, RETURN_STMT, GARBAGE_STMT,
+            BLOCK, SEMICOLON_STMT, IF_STMT, EXPR, RETURN_STMT, LABEL_STMT, GARBAGE_STMT,
             BREAK_STMT, GOTO_STMT, DO_STMT, WHILE_STMT, FOR_STMT, FUNCTION_STMT,
-            LOCAL_FUNCTION_STMT, LOCAL_ASSIGNMENT_STMT, FUNCTION_CALL_STMT
+            LOCAL_FUNCTION_STMT, LOCAL_ASSIGNMENT_STMT, FUNCTION_CALL_STMT, STRING, NUMBER,
+            FIELD, FIELD_LIST, TABLE_CONSTRUCTOR
         )
     }
 }

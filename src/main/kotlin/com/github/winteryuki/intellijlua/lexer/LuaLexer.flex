@@ -45,7 +45,7 @@ LocalFunction = "local" {WS}+ "function"
 %%
 
 "("                 { return LuaTokenType.Companion.getL_PAREN(); }
-"("                 { return LuaTokenType.Companion.getR_PAREN(); }
+")"                 { return LuaTokenType.Companion.getR_PAREN(); }
 "{"                 { return LuaTokenType.Companion.getL_BRACE(); }
 "}"                 { return LuaTokenType.Companion.getR_BRACE(); }
 "["                 { return LuaTokenType.Companion.getL_BRACKET(); }

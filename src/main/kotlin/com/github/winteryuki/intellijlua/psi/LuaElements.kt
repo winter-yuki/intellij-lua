@@ -23,6 +23,8 @@ class LuaSemicolonStmtElement(node: ASTNode) : LuaPsiElement(node)
 
 class LuaBreakStmtElement(node: ASTNode) : LuaPsiElement(node)
 
+class LuaLabelStmtElement(node: ASTNode) : LuaPsiElement(node)
+
 class LuaGotoStmtElement(node: ASTNode) : LuaPsiElement(node)
 
 class LuaDoStmtElement(node: ASTNode) : LuaPsiElement(node)
@@ -46,3 +48,13 @@ class LuaReturnStmtElement(node: ASTNode) : LuaPsiElement(node)
 class LuaGarbageStmtElement(node: ASTNode) : LuaPsiElement(node)
 
 class LuaExprElement(node: ASTNode) : LuaPsiElement(node)
+
+class LuaStringElement(node: ASTNode) : LuaPsiElement(node)
+
+class LuaNumberElement(node: ASTNode) : LuaPsiElement(node)
+
+class LuaFieldElement(node: ASTNode) : LuaPsiElement(node)
+
+class LuaFieldListElement(node: ASTNode) : LuaPsiElement(node)
+
+class LuaTableConstructorElement(node: ASTNode) : LuaPsiElement(node)

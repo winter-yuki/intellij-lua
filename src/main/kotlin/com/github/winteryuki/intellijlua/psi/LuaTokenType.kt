@@ -22,6 +22,7 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
         private object WhiteSpace : TokenSort
         private object StmtBegin : TokenSort
         private object StmtEnd : TokenSort
+        private object FieldSep : TokenSort
 
         val keywords by lazy { tokenSetOf(Keyword) }
         val operators by lazy { tokenSetOf(Operator) }
@@ -35,6 +36,7 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
         val whiteSpaces by lazy { tokenSetOf(WhiteSpace) }
         val beginStmt by lazy { tokenSetOf(StmtBegin) }
         val endStmt by lazy { tokenSetOf(StmtEnd) }
+        val fieldSep by lazy { tokenSetOf(FieldSep) }
 
         val WHITE_SPACE by token(WhiteSpace)
 
@@ -96,12 +98,12 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
 
         val ASSIGN by token(Operator)   // =
 
-        val SEMICOLON by token(Operator, StmtEnd)    // ;
-        val COLON by token(Operator)                 // :
-        val DOUBLE_COLON by token(Operator)          // ::
-        val COMMA by token(Operator)                 // ,
-        val DOT by token(Operator)                   // .
-        val DOTDOTDOT by token(Operator)             // ...
+        val SEMICOLON by token(Operator, StmtEnd, FieldSep)     // ;
+        val COLON by token(Operator)                            // :
+        val DOUBLE_COLON by token(Operator)                     // ::
+        val COMMA by token(Operator, FieldSep)                  // ,
+        val DOT by token(Operator)                              // .
+        val DOTDOTDOT by token(Operator)                        // ...
 
         val LINE_COMMENT by token(Comment)
         val BLOCK_COMMENT by token(Comment)

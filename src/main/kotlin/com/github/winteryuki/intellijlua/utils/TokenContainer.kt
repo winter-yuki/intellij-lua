@@ -26,7 +26,7 @@ abstract class AbstractTokenContainer<I : IElementType>(
     }
 
     protected fun token(vararg sorts: TokenSort) = PropertyDelegateProvider { _: Any?, property ->
-        val item by lazy { tokenFactory(property.name).also { tokenSorts[it] = sorts.toSet() } }
-        ReadOnlyProperty<Any?, I> { _, _ -> item }
+        val token by lazy { tokenFactory(property.name).also { tokenSorts[it] = sorts.toSet() } }
+        ReadOnlyProperty<Any?, I> { _, _ -> token }
     }
 }
