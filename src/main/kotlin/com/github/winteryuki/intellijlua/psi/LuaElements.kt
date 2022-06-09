@@ -37,6 +37,8 @@ class LuaForStmtElement(node: ASTNode) : LuaPsiElement(node)
 
 class LuaFunctionStmtElement(node: ASTNode) : LuaPsiElement(node)
 
+class LuaAssignmentStmtElement(node: ASTNode) : LuaPsiElement(node)
+
 class LuaLocalFunctionStmtElement(node: ASTNode) : LuaPsiElement(node)
 
 class LuaLocalAssignmentStmtElement(node: ASTNode) : LuaPsiElement(node)
@@ -46,6 +48,8 @@ class LuaFunctionCallStmtElement(node: ASTNode) : LuaPsiElement(node)
 class LuaReturnStmtElement(node: ASTNode) : LuaPsiElement(node)
 
 class LuaGarbageStmtElement(node: ASTNode) : LuaPsiElement(node)
+
+class LuaRepeatStmtElement(node: ASTNode) : LuaPsiElement(node)
 
 class LuaExprElement(node: ASTNode) : LuaPsiElement(node)
 

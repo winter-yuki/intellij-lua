@@ -32,6 +32,8 @@ class LuaElementType(@NonNls debugName: String) : IElementType(debugName, LuaLan
         val FUNCTION_CALL_STMT by token(Stmt)
         val RETURN_STMT by token(Stmt)
         val GARBAGE_STMT by token(Stmt)
+        val REPEAT_STMT by token(Stmt)
+        val ASSIGNMENT_STMT by token(Stmt)
 
         val EXPR by token()
 
@@ -64,6 +66,8 @@ class LuaElementType(@NonNls debugName: String) : IElementType(debugName, LuaLan
                 FIELD -> LuaFieldElement(node)
                 FIELD_LIST -> LuaFieldListElement(node)
                 TABLE_CONSTRUCTOR -> LuaTableConstructorElement(node)
+                REPEAT_STMT -> LuaRepeatStmtElement(node)
+                ASSIGNMENT_STMT -> LuaAssignmentStmtElement(node)
                 else -> error("Unknown element type $type")
             }
 

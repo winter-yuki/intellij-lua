@@ -9,7 +9,6 @@ import com.github.winteryuki.intellijlua.parsek.node
 import com.github.winteryuki.intellijlua.parsek.or
 import com.github.winteryuki.intellijlua.parsek.skipBad
 import com.github.winteryuki.intellijlua.parsek.some
-import com.github.winteryuki.intellijlua.parsek.todo
 import com.github.winteryuki.intellijlua.parsek.token
 import com.github.winteryuki.intellijlua.parsek.tryAnd
 import com.github.winteryuki.intellijlua.psi.LuaElementType
@@ -36,8 +35,7 @@ class LuaParser : PsiParser {
         }
 
         val block by lazy {
-            // TODO and mb(retStmt)
-            LuaElementType.BLOCK.node(many(stmt))
+            LuaElementType.BLOCK.node(many(stmt) and mb(retStmt))
         }
 
         val stmt: Parser by lazy {
@@ -47,33 +45,26 @@ class LuaParser : PsiParser {
                 LuaElementType.LABEL_STMT.node(label),
                 LuaElementType.GOTO_STMT.node(LuaTokenType.GOTO.token() tryAnd name),
                 LuaElementType.IF_STMT.node(
-                    iff tryAnd todo(LuaTokenType.THEN) // TODO expr
-                            and then and { block }
-                            and many(elseif tryAnd todo(LuaTokenType.THEN) and then and { block })
-                            and end
+                    iff tryAnd expr and then and { block }
+                            and many(elseif tryAnd expr and then and { block })
+                            and mb(elsee tryAnd { block }) and end
                 ),
                 LuaElementType.DO_STMT.node(doo tryAnd { block } and end),
-                LuaElementType.WHILE_STMT.node(whilee tryAnd todo(LuaTokenType.DO) and doo and { block } and end),
-//            (repeat and { block } and until and expr),
+                LuaElementType.WHILE_STMT.node(whilee tryAnd expr and doo and { block } and end),
+                LuaElementType.REPEAT_STMT.node(repeat tryAnd { block } and until tryAnd expr),
                 LuaElementType.FOR_STMT.node(
-                    forr tryAnd name and assign and todo(LuaTokenType.COMMA) and todo(LuaTokenType.DO)
-                            and { block } and end
+                    forr tryAnd name and assign and expr and comma and expr and doo and { block } and end
                 ),
                 LuaElementType.FOR_STMT.node(
-                    forr tryAnd nameList and inn and todo(LuaTokenType.DO) and doo and { block } and end
+                    forr tryAnd nameList and inn and expr and doo and { block } and end
                 ),
-                LuaElementType.EXPR.node(expr and semicolon), // TODO test
-
-//            (forr and name and assign and expr and comma and expr
-//                    and mb(comma and expr) and doo
-//                    and { block } and end).node(LuaElementType.FOR_STMT),
-//            (forr and nameList and inn and exprList and doo and { block } and end).node(LuaElementType.FOR_STMT),
-//            (function and funcName and funcBody).node(LuaElementType.FUNCTION_STMT),
-//            (localFunction and name and funcBody).node(LuaElementType.FUNCTION_STMT),
-//            (local tryAnd attNameList and mb(assign and exprList)).node(LuaElementType.LOCAL_ASSIGNMENT_STMT),
-//            (varList and assign and exprList).node(LuaElementType.LOCAL_ASSIGNMENT_STMT),
-//            functionCall.node(LuaElementType.FUNCTION_CALL_STMT),
-
+                LuaElementType.LOCAL_FUNCTION_STMT.node(localFunction tryAnd name and funcBody),
+                LuaElementType.FUNCTION_STMT.node(function tryAnd funcName and funcBody),
+                LuaElementType.LOCAL_ASSIGNMENT_STMT.node(
+                    local tryAnd attNameList and mb(assign tryAnd exprList)
+                ),
+                LuaElementType.FUNCTION_CALL_STMT.node(functionCall),
+                LuaElementType.ASSIGNMENT_STMT.node(varList tryAnd assign tryAnd exprList)
             )
         }
 
@@ -203,9 +194,9 @@ class LuaParser : PsiParser {
                 number,
                 string,
                 ellipsis,
-//                functionDef,
-//                prefixExp,
-//                tableConstructor,
+                functionDef,
+                prefixExp,
+                tableConstructor,
             )
         }
 
@@ -270,18 +261,24 @@ class LuaParser : PsiParser {
         }
 
         val tableConstructor by lazy {
-            lBrace tryAnd { mb(fieldList) } and rBrace
+            LuaElementType.TABLE_CONSTRUCTOR.node(
+                lBrace tryAnd { mb(fieldList) } and rBrace
+            )
         }
 
         val fieldList by lazy {
-            field tryAnd many(fieldSep and field) and mb(fieldSep)
+            LuaElementType.FIELD_LIST.node(
+                field tryAnd many(fieldSep and field) and mb(fieldSep)
+            )
         }
 
         val field: Parser by lazy {
-            or(
-                lBracket tryAnd expr and rBracket and assign and { expr },
-                name tryAnd assign and { expr },
-                expr
+            LuaElementType.FIELD.node(
+                or(
+                    lBracket tryAnd expr and rBracket and assign and { expr },
+                    name tryAnd assign and { expr },
+                    expr
+                )
             )
         }
 
