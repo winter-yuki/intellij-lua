@@ -6,7 +6,7 @@ import com.github.winteryuki.intellijlua.utils.TokenSort
 import com.intellij.psi.tree.IElementType
 import org.jetbrains.annotations.NonNls
 
-class LuaTokenType private constructor(@NonNls debugName: String) : IElementType(debugName, LuaLanguage) {
+class LuaTokenType private constructor(@NonNls val name: String) : IElementType(name, LuaLanguage) {
     override fun toString(): String = "LuaTokenType.${super.toString()}"
 
     companion object : AbstractTokenContainer<LuaTokenType>(::LuaTokenType) {
@@ -23,6 +23,7 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
         private object StmtBegin : TokenSort
         private object StmtEnd : TokenSort
         private object FieldSep : TokenSort
+        private object ExprFirst : TokenSort
 
         val keywords by lazy { tokenSetOf(Keyword) }
         val operators by lazy { tokenSetOf(Operator) }
@@ -37,6 +38,7 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
         val beginStmt by lazy { tokenSetOf(StmtBegin) }
         val endStmt by lazy { tokenSetOf(StmtEnd) }
         val fieldSep by lazy { tokenSetOf(FieldSep) }
+        val exprFirst by lazy { tokenSetOf(ExprFirst) }
 
         val WHITE_SPACE by token(WhiteSpace)
 
@@ -49,7 +51,7 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
         val END by token(Keyword, StmtEnd)
 
         val IF by token(Keyword, StmtBegin)
-        val THEN by token(Keyword)
+        val THEN by token(Keyword, ExprFirst)
         val ELSE by token(Keyword)
         val ELSEIF by token(Keyword)
 
@@ -58,7 +60,7 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
         val WHILE by token(Keyword, StmtBegin)
         val BREAK by token(Keyword, StmtBegin)
         val REPEAT by token(Keyword, StmtBegin)
-        val DO by token(Keyword, StmtBegin)
+        val DO by token(Keyword, StmtBegin, ExprFirst)
 
         val AND by token(Keyword)
         val OR by token(Keyword)
@@ -98,12 +100,12 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
 
         val ASSIGN by token(Operator)   // =
 
-        val SEMICOLON by token(Operator, StmtEnd, FieldSep)     // ;
-        val COLON by token(Operator)                            // :
-        val DOUBLE_COLON by token(Operator)                     // ::
-        val COMMA by token(Operator, FieldSep)                  // ,
-        val DOT by token(Operator)                              // .
-        val DOTDOTDOT by token(Operator)                        // ...
+        val SEMICOLON by token(Operator, StmtEnd, FieldSep, ExprFirst)      // ;
+        val COLON by token(Operator)                                        // :
+        val DOUBLE_COLON by token(Operator)                                 // ::
+        val COMMA by token(Operator, FieldSep, ExprFirst)                   // ,
+        val DOT by token(Operator)                                          // .
+        val DOTDOTDOT by token(Operator)                                    // ...
 
         val LINE_COMMENT by token(Comment)
         val BLOCK_COMMENT by token(Comment)
