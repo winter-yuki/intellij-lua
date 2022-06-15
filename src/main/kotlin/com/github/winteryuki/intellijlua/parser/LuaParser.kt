@@ -3,14 +3,19 @@ package com.github.winteryuki.intellijlua.parser
 import com.github.winteryuki.intellijlua.parsek.Parser
 import com.github.winteryuki.intellijlua.parsek.advance
 import com.github.winteryuki.intellijlua.parsek.and
+import com.github.winteryuki.intellijlua.parsek.chain
 import com.github.winteryuki.intellijlua.parsek.many
+import com.github.winteryuki.intellijlua.parsek.marked
 import com.github.winteryuki.intellijlua.parsek.mb
 import com.github.winteryuki.intellijlua.parsek.node
+import com.github.winteryuki.intellijlua.parsek.nodeChain
 import com.github.winteryuki.intellijlua.parsek.or
+import com.github.winteryuki.intellijlua.parsek.orInterrupt
 import com.github.winteryuki.intellijlua.parsek.skipBad
 import com.github.winteryuki.intellijlua.parsek.some
 import com.github.winteryuki.intellijlua.parsek.token
 import com.github.winteryuki.intellijlua.parsek.tryAnd
+import com.github.winteryuki.intellijlua.parsek.tryOr
 import com.github.winteryuki.intellijlua.psi.LuaElementType
 import com.github.winteryuki.intellijlua.psi.LuaTokenType
 import com.intellij.lang.ASTNode
@@ -40,32 +45,42 @@ class LuaParser : PsiParser {
 
         val stmt: Parser by lazy {
             or(
-                LuaElementType.SEMICOLON_STMT.node(semicolon),
-                LuaElementType.BREAK_STMT.node(LuaTokenType.BREAK.token()),
-                LuaElementType.LABEL_STMT.node(label),
+                LuaElementType.SEMICOLON_STMT.node(semicolon.orInterrupt()),
+                LuaElementType.BREAK_STMT.node(LuaTokenType.BREAK.token().orInterrupt()),
+                LuaElementType.LABEL_STMT.node(doubleColon tryAnd name and doubleColon),
                 LuaElementType.GOTO_STMT.node(LuaTokenType.GOTO.token() tryAnd name),
                 LuaElementType.IF_STMT.node(
                     iff tryAnd expr and then and { block }
                             and many(elseif tryAnd expr and then and { block })
-                            and mb(elsee tryAnd { block }) and end
+                            and mb(elseT tryAnd { block })
+                            and end
                 ),
-                LuaElementType.DO_STMT.node(doo tryAnd { block } and end),
-                LuaElementType.WHILE_STMT.node(whilee tryAnd expr and doo and { block } and end),
-                LuaElementType.REPEAT_STMT.node(repeat tryAnd { block } and until tryAnd expr),
+                LuaElementType.DO_STMT.node(doT tryAnd { block } and end),
+                LuaElementType.WHILE_STMT.node(whileT tryAnd expr and doT and { block } and end),
+                LuaElementType.REPEAT_STMT.node(repeat tryAnd { block } and until and expr),
                 LuaElementType.FOR_STMT.node(
-                    forr tryAnd name and assign and expr and comma and expr and doo and { block } and end
+                    forT tryAnd nameList and inT tryAnd exprList and doT and { block } and end
                 ),
                 LuaElementType.FOR_STMT.node(
-                    forr tryAnd nameList and inn and expr and doo and { block } and end
+                    forT tryAnd name and assign and expr and comma and expr and mb(comma and expr)
+                            and doT and { block } and end
                 ),
-                LuaElementType.LOCAL_FUNCTION_STMT.node(localFunction tryAnd name and funcBody),
-                LuaElementType.FUNCTION_STMT.node(function tryAnd funcName and funcBody),
+                LuaElementType.LOCAL_FUNCTION_STMT.node(
+                    localFunction tryAnd name and lParen and paramList and rParen and { block } and end
+                ),
+                LuaElementType.FUNCTION_STMT.node(
+                    function tryAnd funcName and lParen and paramList and rParen and { block } and end
+                ),
                 LuaElementType.LOCAL_ASSIGNMENT_STMT.node(
                     local tryAnd attNameList and mb(assign tryAnd exprList)
-                ),
-                LuaElementType.FUNCTION_CALL_STMT.node(functionCall),
-                LuaElementType.ASSIGNMENT_STMT.node(varList tryAnd assign tryAnd exprList)
+                )
+//                LuaElementType.FUNCTION_CALL_STMT.node(functionCall),
+//                LuaElementType.ASSIGNMENT_STMT.node(varList tryAnd assign tryAnd exprList)
             )
+        }
+
+        val retStmt by lazy {
+            chain(ret tryAnd mb(exprList) and mb(semicolon))
         }
 
         val garbage by lazy {
@@ -74,7 +89,7 @@ class LuaParser : PsiParser {
                     val marker = it.mark()
                     if (it.tokenType == null) {
                         it.advance()
-                        return@Parser null
+                        return@Parser Parser.Success
                     }
                     if (it.tokenType in LuaTokenType.beginStmt) {
                         it.advance()
@@ -91,116 +106,77 @@ class LuaParser : PsiParser {
                     }
                     marker.error("Unknown statement")
                 }
-                Parser.Success()
+                Parser.Success
             }
-        }
-
-        val attNameList by lazy {
-            name and attrib and many(comma and name and attrib)
-        }
-
-        val attrib by lazy {
-            mb(lt and name and gt)
-        }
-
-        val retStmt by lazy {
-            ret tryAnd mb(exprList) and mb(semicolon)
-        }
-
-        val label by lazy {
-            doubleColon and name and doubleColon
-        }
-
-        val funcName by lazy {
-            name tryAnd many(dot and name) and mb(colon and name)
-        }
-
-        val varList by lazy {
-            var_ tryAnd many(comma and var_)
-        }
-
-        val nameList by lazy {
-            name tryAnd many(comma and name)
-        }
-
-        val exprList: Parser by lazy {
-            expr tryAnd many(comma and { expr })
         }
 
         val expr: Parser by lazy {
             LuaElementType.EXPR.node(
                 or(
-                    expr1 tryAnd opPow tryAnd { expr },
-                    expr1
+                    exprAtom and opPow tryAnd { expr },
+                    opUnary tryAnd { expr },
+                    exprAtom and opMulDivMod tryAnd { expr },
+                    exprAtom and opAddSub tryAnd { expr },
+                    exprAtom and opStrcat tryAnd { expr },
+                    exprAtom and opCmp tryAnd { expr },
+                    exprAtom and LuaTokenType.AND.token() tryAnd { expr },
+                    exprAtom and LuaTokenType.OR.token() tryAnd { expr },
+                    exprAtom and opBitewise tryAnd { expr },
+                    exprAtom
                 )
             )
         }
 
-        val expr1: Parser by lazy {
-            or(
-                opUnary tryAnd { expr },
-                expr2 tryAnd opMulDivMod tryAnd { expr },
-                expr2
-            )
-        }
-
-        val expr2 by lazy {
-            or(
-                expr3 tryAnd opAddSub tryAnd { expr },
-                expr3
-            )
-        }
-
-        val expr3 by lazy {
-            or(
-                expr4 tryAnd opStrcat tryAnd { expr },
-                expr4
-            )
-        }
-
-        val expr4 by lazy {
-            or(
-                expr5 tryAnd opCmp tryAnd { expr },
-                expr5
-            )
-        }
-
-        val expr5 by lazy {
-            or(
-                expr6 tryAnd LuaTokenType.AND.token() tryAnd { expr },
-                expr6
-            )
-        }
-
-        val expr6 by lazy {
-            or(
-                expr7 tryAnd LuaTokenType.OR.token() tryAnd { expr },
-                expr7
-            )
-        }
-
-        val expr7 by lazy {
-            or(
-                expr8 tryAnd opBitewise tryAnd { expr },
-                expr8
-            )
-        }
-
-        val expr8 by lazy {
-            or(
+        val exprAtom by lazy {
+            tryOr(
+                lParen tryAnd { expr } and rParen,
                 LuaTokenType.NIL.token(),
                 LuaTokenType.FALSE.token(),
                 LuaTokenType.TRUE.token(),
                 number,
                 string,
                 ellipsis,
-                functionDef,
-                prefixExp,
-                tableConstructor,
+                name,
+//                functionDef, TODO
+//                prefixExp,
+//                tableConstructor,
             )
         }
 
-        val expr_ = Parser {
+        val nameList by lazy {
+            chain(name tryAnd many(comma and name))
+        }
+
+        val exprList by lazy {
+            chain(expr tryAnd many(comma and { expr }))
+        }
+
+        val paramList by lazy {
+            or(
+                nameList tryAnd mb(comma and ellipsis),
+                mb(ellipsis)
+            )
+        }
+
+        val funcName by lazy {
+            chain(name tryAnd many(dot and name) and mb(colon and name))
+        }
+
+        val attNameList by lazy {
+            name and mb(attrib) and many(comma and name and mb(attrib))
+        }
+
+        val attrib by lazy {
+            lt and name and gt
+        }
+
+        // TODO
+
+        val varList by lazy {
+            var_ tryAnd many(comma and var_)
+        }
+
+        val expr_ = marked(LuaElementType.EXPR) {
             it.skipBad()
             while (
                 !it.eof()
@@ -210,7 +186,7 @@ class LuaParser : PsiParser {
             ) {
                 it.advance()
             }
-            Parser.Success(LuaElementType.EXPR)
+            Parser.Success
         }
 
         val prefixExp by lazy {
@@ -250,7 +226,7 @@ class LuaParser : PsiParser {
         }
 
         val funcBody by lazy {
-            lParen tryAnd mb(parList) and rParen and { block } and end
+            lParen and mb(parList) and rParen and { block } and end
         }
 
         val parList by lazy {
@@ -261,19 +237,19 @@ class LuaParser : PsiParser {
         }
 
         val tableConstructor by lazy {
-            LuaElementType.TABLE_CONSTRUCTOR.node(
+            LuaElementType.TABLE_CONSTRUCTOR.nodeChain(
                 lBrace tryAnd { mb(fieldList) } and rBrace
             )
         }
 
         val fieldList by lazy {
-            LuaElementType.FIELD_LIST.node(
+            LuaElementType.FIELD_LIST.nodeChain(
                 field tryAnd many(fieldSep and field) and mb(fieldSep)
             )
         }
 
         val field: Parser by lazy {
-            LuaElementType.FIELD.node(
+            LuaElementType.FIELD.nodeChain(
                 or(
                     lBracket tryAnd expr and rBracket and assign and { expr },
                     name tryAnd assign and { expr },
@@ -351,16 +327,16 @@ class LuaParser : PsiParser {
         val local = LuaTokenType.LOCAL.token()
         val doubleColon = LuaTokenType.DOUBLE_COLON.token()
         val ret = LuaTokenType.RETURN.token()
-        val doo = LuaTokenType.DO.token()
-        val whilee = LuaTokenType.WHILE.token()
+        val doT = LuaTokenType.DO.token()
+        val whileT = LuaTokenType.WHILE.token()
         val repeat = LuaTokenType.REPEAT.token()
         val until = LuaTokenType.UNTIL.token()
         val iff = LuaTokenType.IF.token()
         val then = LuaTokenType.THEN.token()
-        val elsee = LuaTokenType.ELSE.token()
+        val elseT = LuaTokenType.ELSE.token()
         val elseif = LuaTokenType.ELSEIF.token()
-        val forr = LuaTokenType.FOR.token()
-        val inn = LuaTokenType.IN.token()
+        val forT = LuaTokenType.FOR.token()
+        val inT = LuaTokenType.IN.token()
         val localFunction = LuaTokenType.LOCAL_FUNCTION.token()
     }
 }

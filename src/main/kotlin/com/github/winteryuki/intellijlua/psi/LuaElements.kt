@@ -62,3 +62,5 @@ class LuaFieldElement(node: ASTNode) : LuaPsiElement(node)
 class LuaFieldListElement(node: ASTNode) : LuaPsiElement(node)
 
 class LuaTableConstructorElement(node: ASTNode) : LuaPsiElement(node)
+
+class LuaBinOpElement(node: ASTNode) : LuaPsiElement(node)

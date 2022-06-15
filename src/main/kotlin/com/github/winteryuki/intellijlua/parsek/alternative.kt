@@ -1,33 +1,23 @@
 package com.github.winteryuki.intellijlua.parsek
 
-infix fun Parser.or(other: Parser) = Parser {
+private infix fun Parser.or(other: Parser) = Parser {
     val marker1 = it.mark()
     val lhs = invoke(it)
-    when (lhs) {
-        is Parser.Success -> {
-            marker1.drop()
-            return@Parser lhs
-        }
-        null, is Parser.Fail -> marker1.rollbackTo()
+    if (lhs is Parser.Interrupt) marker1.rollbackTo() else {
+        marker1.drop()
+        return@Parser lhs
     }
     val marker2 = it.mark()
     val rhs = other(it)
-    when (rhs) {
-        is Parser.Success -> {
-            marker2.drop()
-            return@Parser rhs
-        }
-        null, is Parser.Fail -> marker2.rollbackTo()
+    if (rhs is Parser.Interrupt) marker2.rollbackTo() else {
+        marker2.drop()
+        return@Parser rhs
     }
-    if (lhs == null && rhs == null) Parser.Fail("alternative") else {
-        if (lhs == null) rhs else if (rhs == null) lhs else {
-            require(lhs is Parser.Fail)
-            require(rhs is Parser.Fail)
-            lhs join rhs
-        }
-    }
+    lhs join rhs
 }
 
-fun or(vararg parsers: Parser): Parser = parsers.reduce(Parser::or)
+fun or(vararg parsers: Parser): Parser = parsers.reduce(Parser::or).orFail()
 
-fun mb(parser: Parser) = parser or Parser.EMPTY
+fun tryOr(vararg parsers: Parser): Parser = parsers.map(Parser::orInterrupt).reduce(Parser::or).orFail()
+
+fun mb(parser: Parser) = (parser.orInterrupt() or Parser.EMPTY).orFail()

@@ -7,24 +7,34 @@ infix fun Parser.tryAnd(next: Parser) = tryAnd { next }
 
 infix fun Parser.and(next: Parser) = and { next }
 
+/**
+ * Interrupts parsing if left parser failed.
+ */
 infix fun Parser.tryAnd(next: () -> Parser) = andHelper(next, rollback = true)
 
 infix fun Parser.and(next: () -> Parser) = andHelper(next, rollback = false)
 
 private fun Parser.andHelper(next: () -> Parser, rollback: Boolean) = Parser {
     val marker1 = it.mark()
-    val lhs = invoke(it) ?: run { marker1.drop(); return@Parser null }
+    val lhs = invoke(it)
     when (lhs) {
         is Parser.Success -> marker1.drop()
-        is Parser.Fail -> {
+        is Parser.Interrupt -> {
+            marker1.drop()
+            return@Parser lhs
+        }
+        is Parser.Failure -> {
             if (!rollback) marker1.drop() else {
                 marker1.rollbackTo()
-                return@Parser null
+                return@Parser Parser.Interrupt(lhs.expected)
             }
         }
     }
-    val rhs = next()(it) ?: error("Parsing sequence cannot be interrupted from the right")
-    lhs join rhs
+    when (val rhs = next()(it)) {
+        is Parser.Success -> lhs
+        is Parser.Interrupt -> error("Right operand should not be interrupted")
+        is Parser.Failure -> if (lhs !is Parser.Failure) rhs else lhs join rhs
+    }
 }
 
 fun many(parser: Parser) = Parser {
@@ -40,7 +50,7 @@ fun many(parser: Parser) = Parser {
     } else {
         marker.rollbackTo()
     }
-    Parser.Success()
+    Parser.Success
 }
 
 fun some(parser: Parser) = parser and many(parser)

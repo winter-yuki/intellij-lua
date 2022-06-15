@@ -42,6 +42,7 @@ class LuaElementType(@NonNls debugName: String) : IElementType(debugName, LuaLan
         val FIELD by token()
         val FIELD_LIST by token()
         val TABLE_CONSTRUCTOR by token()
+        val BIN_OP by token()
 
         fun createElement(node: ASTNode): PsiElement =
             when (val type = node.elementType) {
@@ -68,6 +69,7 @@ class LuaElementType(@NonNls debugName: String) : IElementType(debugName, LuaLan
                 TABLE_CONSTRUCTOR -> LuaTableConstructorElement(node)
                 REPEAT_STMT -> LuaRepeatStmtElement(node)
                 ASSIGNMENT_STMT -> LuaAssignmentStmtElement(node)
+                BIN_OP -> LuaBinOpElement(node)
                 else -> error("Unknown element type $type")
             }
 
