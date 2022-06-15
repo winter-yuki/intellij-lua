@@ -5,14 +5,10 @@ import com.github.winteryuki.intellijlua.parsek.advance
 import com.github.winteryuki.intellijlua.parsek.and
 import com.github.winteryuki.intellijlua.parsek.chain
 import com.github.winteryuki.intellijlua.parsek.many
-import com.github.winteryuki.intellijlua.parsek.marked
 import com.github.winteryuki.intellijlua.parsek.mb
 import com.github.winteryuki.intellijlua.parsek.node
-import com.github.winteryuki.intellijlua.parsek.nodeChain
 import com.github.winteryuki.intellijlua.parsek.or
 import com.github.winteryuki.intellijlua.parsek.orInterrupt
-import com.github.winteryuki.intellijlua.parsek.skipBad
-import com.github.winteryuki.intellijlua.parsek.some
 import com.github.winteryuki.intellijlua.parsek.token
 import com.github.winteryuki.intellijlua.parsek.tryAnd
 import com.github.winteryuki.intellijlua.parsek.tryOr
@@ -73,9 +69,10 @@ class LuaParser : PsiParser {
                 ),
                 LuaElementType.LOCAL_ASSIGNMENT_STMT.node(
                     local tryAnd attNameList and mb(assign tryAnd exprList)
-                )
-//                LuaElementType.FUNCTION_CALL_STMT.node(functionCall),
-//                LuaElementType.ASSIGNMENT_STMT.node(varList tryAnd assign tryAnd exprList)
+                ),
+                LuaElementType.FUNCTION_CALL_STMT.node(
+                    or(name.orInterrupt(), lParen tryAnd { expr } and rParen) and lParen and mb(exprList) and rParen
+                ),
             )
         }
 
@@ -137,9 +134,6 @@ class LuaParser : PsiParser {
                 string,
                 ellipsis,
                 name,
-//                functionDef, TODO
-//                prefixExp,
-//                tableConstructor,
             )
         }
 
@@ -169,96 +163,6 @@ class LuaParser : PsiParser {
         val attrib by lazy {
             lt and name and gt
         }
-
-        // TODO
-
-        val varList by lazy {
-            var_ tryAnd many(comma and var_)
-        }
-
-        val expr_ = marked(LuaElementType.EXPR) {
-            it.skipBad()
-            while (
-                !it.eof()
-                && it.tokenType !in LuaTokenType.beginStmt
-                && it.tokenType !in LuaTokenType.endStmt
-                && it.tokenType !in LuaTokenType.exprFirst
-            ) {
-                it.advance()
-            }
-            Parser.Success
-        }
-
-        val prefixExp by lazy {
-            varOrExpr tryAnd many(nameAndArgs)
-        }
-
-        val functionCall by lazy {
-            varOrExpr tryAnd some(nameAndArgs)
-        }
-
-        val varOrExpr: Parser by lazy {
-            or(var_, lParen tryAnd { expr } and rParen)
-        }
-
-        val var_ by lazy {
-            or(name, lBracket tryAnd { expr } and rBracket and varSuffix) and many(varSuffix)
-        }
-
-        val varSuffix by lazy {
-            many(nameAndArgs) and or(lBracket and { expr } and rBracket, dot and name)
-        }
-
-        val nameAndArgs by lazy {
-            mb(colon tryAnd name) and args
-        }
-
-        val args by lazy {
-            or(
-                lParen tryAnd { mb(exprList) } and rParen,
-                tableConstructor,
-                string
-            )
-        }
-
-        val functionDef by lazy {
-            function tryAnd funcBody
-        }
-
-        val funcBody by lazy {
-            lParen and mb(parList) and rParen and { block } and end
-        }
-
-        val parList by lazy {
-            or(
-                nameList tryAnd mb(comma and ellipsis),
-                ellipsis
-            )
-        }
-
-        val tableConstructor by lazy {
-            LuaElementType.TABLE_CONSTRUCTOR.nodeChain(
-                lBrace tryAnd { mb(fieldList) } and rBrace
-            )
-        }
-
-        val fieldList by lazy {
-            LuaElementType.FIELD_LIST.nodeChain(
-                field tryAnd many(fieldSep and field) and mb(fieldSep)
-            )
-        }
-
-        val field: Parser by lazy {
-            LuaElementType.FIELD.nodeChain(
-                or(
-                    lBracket tryAnd expr and rBracket and assign and { expr },
-                    name tryAnd assign and { expr },
-                    expr
-                )
-            )
-        }
-
-        val fieldSep = LuaTokenType.fieldSep.token("Field separator")
 
         val opCmp = TokenSet.create(
             LuaTokenType.LT,
