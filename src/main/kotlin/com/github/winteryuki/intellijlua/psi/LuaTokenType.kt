@@ -1,37 +1,29 @@
 package com.github.winteryuki.intellijlua.psi
 
 import com.github.winteryuki.intellijlua.LuaLanguage
+import com.github.winteryuki.intellijlua.utils.AbstractTokenContainer
+import com.github.winteryuki.intellijlua.utils.TokenSort
 import com.intellij.psi.tree.IElementType
-import com.intellij.psi.tree.TokenSet
 import org.jetbrains.annotations.NonNls
-import kotlin.properties.PropertyDelegateProvider
-import kotlin.properties.ReadOnlyProperty
 
-class LuaTokenType private constructor(@NonNls debugName: String) : IElementType(debugName, LuaLanguage) {
+class LuaTokenType private constructor(@NonNls val name: String) : IElementType(name, LuaLanguage) {
     override fun toString(): String = "LuaTokenType.${super.toString()}"
 
-    companion object {
-        private interface Sort
-        private object Keyword : Sort
-        private object Operator : Sort
-        private object Constant : Sort
-        private object Comment : Sort
-        private object Number : Sort
-        private object StringLiteral : Sort
-        private object Parens : Sort
-        private object Braces : Sort
-        private object Brackets : Sort
-
-        private val tokenSorts = mutableMapOf<LuaTokenType, Set<Sort>>()
-        private fun token(vararg sorts: Sort) = PropertyDelegateProvider { _: Any?, property ->
-            val token by lazy { LuaTokenType(property.name).also { tokenSorts[it] = sorts.toSet() } }
-            ReadOnlyProperty<Any?, LuaTokenType> { _, _ -> token }
-        }
-
-        private fun tokenSetOf(sort: Sort): TokenSet {
-            val filtered = tokens.filter { sort in tokenSorts[it].orEmpty() }
-            return TokenSet.create(*filtered.toTypedArray())
-        }
+    companion object : AbstractTokenContainer<LuaTokenType>(::LuaTokenType) {
+        private object Keyword : TokenSort
+        private object Operator : TokenSort
+        private object Constant : TokenSort
+        private object Comment : TokenSort
+        private object Number : TokenSort
+        private object StringLiteral : TokenSort
+        private object Parens : TokenSort
+        private object Braces : TokenSort
+        private object Brackets : TokenSort
+        private object WhiteSpace : TokenSort
+        private object StmtBegin : TokenSort
+        private object StmtEnd : TokenSort
+        private object FieldSep : TokenSort
+        private object ExprFirst : TokenSort
 
         val keywords by lazy { tokenSetOf(Keyword) }
         val operators by lazy { tokenSetOf(Operator) }
@@ -42,34 +34,42 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
         val parens by lazy { tokenSetOf(Parens) }
         val braces by lazy { tokenSetOf(Braces) }
         val brackets by lazy { tokenSetOf(Brackets) }
+        val whiteSpaces by lazy { tokenSetOf(WhiteSpace) }
+        val beginStmt by lazy { tokenSetOf(StmtBegin) }
+        val endStmt by lazy { tokenSetOf(StmtEnd) }
+        val fieldSep by lazy { tokenSetOf(FieldSep) }
+        val exprFirst by lazy { tokenSetOf(ExprFirst) }
+
+        val WHITE_SPACE by token(WhiteSpace)
 
         val FALSE by token(Constant)
         val TRUE by token(Constant)
 
         val NIL by token(Constant)
 
-        val GOTO by token(Keyword)
-        val END by token(Keyword)
+        val GOTO by token(Keyword, StmtBegin)
+        val END by token(Keyword, StmtEnd)
 
-        val IF by token(Keyword)
-        val THEN by token(Keyword)
+        val IF by token(Keyword, StmtBegin)
+        val THEN by token(Keyword, ExprFirst)
         val ELSE by token(Keyword)
         val ELSEIF by token(Keyword)
 
-        val FOR by token(Keyword)
-        val UNTIL by token(Keyword)
-        val WHILE by token(Keyword)
-        val BREAK by token(Keyword)
-        val REPEAT by token(Keyword)
-        val DO by token(Keyword)
+        val FOR by token(Keyword, StmtBegin)
+        val UNTIL by token(Keyword, StmtBegin)
+        val WHILE by token(Keyword, StmtBegin)
+        val BREAK by token(Keyword, StmtBegin)
+        val REPEAT by token(Keyword, StmtBegin)
+        val DO by token(Keyword, StmtBegin, ExprFirst)
 
         val AND by token(Keyword)
         val OR by token(Keyword)
         val NOT by token(Keyword)
 
-        val FUNCTION by token(Keyword)
-        val LOCAL by token(Keyword)
-        val RETURN by token(Keyword)
+        val LOCAL_FUNCTION by token(Keyword, StmtBegin)
+        val FUNCTION by token(Keyword, StmtBegin)
+        val LOCAL by token(Keyword, StmtBegin)
+        val RETURN by token(Keyword, StmtBegin)
 
         val IN by token(Keyword)
 
@@ -100,12 +100,12 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
 
         val ASSIGN by token(Operator)   // =
 
-        val SEMICOLON by token(Operator)     // ;
-        val COLON by token(Operator)         // :
-        val DOUBLE_COLON by token(Operator)  // ::
-        val COMMA by token(Operator)         // ,
-        val DOT by token(Operator)           // .
-        val DOTDOTDOT by token(Operator)     // ...
+        val SEMICOLON by token(Operator, StmtEnd, FieldSep, ExprFirst)      // ;
+        val COLON by token(Operator)                                        // :
+        val DOUBLE_COLON by token(Operator)                                 // ::
+        val COMMA by token(Operator, FieldSep, ExprFirst)                   // ,
+        val DOT by token(Operator)                                          // .
+        val DOTDOTDOT by token(Operator)                                    // ...
 
         val LINE_COMMENT by token(Comment)
         val BLOCK_COMMENT by token(Comment)
@@ -128,9 +128,8 @@ class LuaTokenType private constructor(@NonNls debugName: String) : IElementType
         val L_BRACKET by token(Brackets) // [
         val R_BRACKET by token(Brackets) // ]
 
-        // Delegate providers are lazy so manual initialization is needed anyway
-        private val tokens = listOf(
-            AND, BREAK, DO, ELSE, ELSEIF, END, FALSE, FOR, FUNCTION, GOTO,
+        override val tokens = listOf(
+            WHITE_SPACE, AND, BREAK, DO, ELSE, ELSEIF, END, FALSE, FOR, LOCAL_FUNCTION, FUNCTION, GOTO,
             IF, IN, LOCAL, NIL, NOT, OR, REPEAT, RETURN, THEN, TRUE, UNTIL, WHILE,
             PLUS, MINUS, MUL, DIV, MOD, POW, SHARP, BAND, BNOT, BOR, SHL, SHR, IDIV, EQ, NEQ, GE, LT, GT, ASSIGN,
             DOTDOT, SEMICOLON, COLON, DOUBLE_COLON, COMMA, DOT, DOTDOTDOT,
