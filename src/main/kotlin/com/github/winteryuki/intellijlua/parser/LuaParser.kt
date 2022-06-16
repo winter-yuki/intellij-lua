@@ -43,8 +43,8 @@ class LuaParser : PsiParser {
             or(
                 LuaElementType.SEMICOLON_STMT.node(semicolon.orInterrupt()),
                 LuaElementType.BREAK_STMT.node(LuaTokenType.BREAK.token().orInterrupt()),
-                LuaElementType.LABEL_STMT.node(doubleColon tryAnd name and doubleColon),
-                LuaElementType.GOTO_STMT.node(LuaTokenType.GOTO.token() tryAnd name),
+                LuaElementType.LABEL_STMT.node(doubleColon tryAnd decl(name) and doubleColon),
+                LuaElementType.GOTO_STMT.node(LuaTokenType.GOTO.token() tryAnd ref(name)),
                 LuaElementType.IF_STMT.node(
                     iff tryAnd expr and then and { block }
                             and many(elseif tryAnd expr and then and { block })
@@ -58,20 +58,23 @@ class LuaParser : PsiParser {
                     forT tryAnd nameList and inT tryAnd exprList and doT and { block } and end
                 ),
                 LuaElementType.FOR_STMT.node(
-                    forT tryAnd name and assign and expr and comma and expr and mb(comma and expr)
+                    forT tryAnd decl(name) and assign and expr and comma and expr and mb(comma and expr)
                             and doT and { block } and end
                 ),
                 LuaElementType.LOCAL_FUNCTION_STMT.node(
-                    localFunction tryAnd name and lParen and paramList and rParen and { block } and end
+                    localFunction tryAnd decl(name) and lParen and paramList and rParen and { block } and end
                 ),
                 LuaElementType.FUNCTION_STMT.node(
-                    function tryAnd funcName and lParen and paramList and rParen and { block } and end
+                    function tryAnd decl(funcName) and lParen and paramList and rParen and { block } and end
                 ),
                 LuaElementType.LOCAL_ASSIGNMENT_STMT.node(
-                    local tryAnd attNameList and mb(assign tryAnd exprList)
+                    local tryAnd decl(attNameList) and mb(assign tryAnd exprList)
                 ),
                 LuaElementType.FUNCTION_CALL_STMT.node(
-                    or(name.orInterrupt(), lParen tryAnd { expr } and rParen) and lParen and mb(exprList) and rParen
+                    or(
+                        ref(name).orInterrupt(),
+                        lParen tryAnd { expr } and rParen
+                    ) and lParen and mb(exprList) and rParen
                 ),
             )
         }
@@ -134,7 +137,7 @@ class LuaParser : PsiParser {
                     number,
                     string,
                     ellipsis,
-                    name,
+                    ref(name),
                 )
             )
         }
@@ -244,5 +247,8 @@ class LuaParser : PsiParser {
         val forT = LuaTokenType.FOR.token()
         val inT = LuaTokenType.IN.token()
         val localFunction = LuaTokenType.LOCAL_FUNCTION.token()
+
+        private fun ref(parser: Parser) = LuaElementType.NAME_REF.node(parser)
+        private fun decl(parser: Parser) = LuaElementType.NAME_DECL.node(parser)
     }
 }
