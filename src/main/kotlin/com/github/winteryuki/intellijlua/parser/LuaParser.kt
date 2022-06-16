@@ -125,15 +125,17 @@ class LuaParser : PsiParser {
         }
 
         val exprAtom by lazy {
-            tryOr(
+            or(
                 lParen tryAnd { expr } and rParen,
-                LuaTokenType.NIL.token(),
-                LuaTokenType.FALSE.token(),
-                LuaTokenType.TRUE.token(),
-                number,
-                string,
-                ellipsis,
-                name,
+                tryOr(
+                    LuaTokenType.NIL.token(),
+                    LuaTokenType.FALSE.token(),
+                    LuaTokenType.TRUE.token(),
+                    number,
+                    string,
+                    ellipsis,
+                    name,
+                )
             )
         }
 
